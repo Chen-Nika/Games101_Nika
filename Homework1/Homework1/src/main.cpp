@@ -32,7 +32,7 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos, Eigen::Vector3f lookat,
     return view;
 }
 
-Eigen::Matrix4f get_model_matrix(float rotation_angle, float x_pos, float size)
+Eigen::Matrix4f get_model_matrix(float rotation_angle, float x_pos, float size, float rotation_angle_any, Eigen::Vector3f any_axis)
 {
     Eigen::Matrix4f model_matrix = Eigen::Matrix4f::Identity();
 
@@ -55,9 +55,30 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle, float x_pos, float size)
     rotate_matrix <<
         cos(theta), -sin(theta), 0, 0,
         sin(theta), cos(theta), 0, 0,
-        0, 0, 1, 1,
+        0, 0, 1, 0,
         0, 0, 0, 1;
 
+    // Rotate around any axis passing through the origin
+    Eigen::Matrix4f rotate_any_matrix = Eigen::Matrix4f::Identity();
+    // Angle to radian
+    float alpha = DEG2RAD(rotation_angle_any);
+    Eigen::Vector3f n = any_axis;
+    Eigen::Matrix3f N;
+    N<<
+        0,-n.z(),n.y(),
+        n.z(),0,-n.x(),
+        -n.y(),n.x(),0;
+    Eigen::Matrix3f R = cos(alpha) * Eigen::Matrix3f::Identity() + (1-cos(alpha))*n*n.transpose() + sin(alpha) * N;
+    rotate_any_matrix<<
+        R(0,0), R(0,1), R(0,2), 0,
+        R(1,0), R(1,1), R(1,2), 0,
+        R(2,0), R(2,1), R(2,2), 0,
+        0,0,0,1;
+    // Another way to call the Eigen library
+    // AngleAxisf rot(rotation_angle * 3.14159265f / 180.0f, any_axis.normalized());
+    // Isometry3f tt = Isometry3f::Identity();
+    // rotate_any_matrix = tt.rotate(rot).matrix();
+    
     // Move along the x-axis
     Eigen::Matrix4f translate_matrix = Eigen::Matrix4f::Identity();
     translate_matrix <<
@@ -67,7 +88,8 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle, float x_pos, float size)
         0, 0, 0, 1;
     
     
-    model_matrix = translate_matrix * rotate_matrix * scale_matrix * model_matrix;
+    model_matrix = translate_matrix * rotate_any_matrix * rotate_matrix * scale_matrix * model_matrix;
+    
     return model_matrix;
 }
 
@@ -89,7 +111,10 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
 
 int main(int argc, const char** argv)
 {
-    float angle = 0;
+    float angle_z = 0;// The angle rotate around z-axis
+    Eigen::Vector3f any_axis = {0,2,-2};// The angle rotate around any axis passing through the origin
+    any_axis.normalize();
+    float any_angle = 0;// The angle rotate around z-axis
     float x_pos = 0;
     float size = 1.0f;
     bool command_line = false;
@@ -98,7 +123,7 @@ int main(int argc, const char** argv)
     if (argc >= 3) {
         command_line = true;
         // Parse the angle to rotate
-        angle = std::stof(argv[2]); // -r by default
+        angle_z = std::stof(argv[2]); // -r by default
         // Parse the filename to write
         if (argc == 4) {
             filename = std::string(argv[3]);
@@ -107,7 +132,7 @@ int main(int argc, const char** argv)
     // Screen resolution 700x700
     rst::rasterizer r(700, 700);
     // Camera coordinate
-    Eigen::Vector3f eye_pos = {0, 0, 5};
+    Eigen::Vector3f eye_pos = {0, 0, 15};
     Eigen::Vector3f eye_lookat = {0,0,-1};
     Eigen::Vector3f eye_up = {0,1,0};
     // The three vertices of the triangle, in counterclockwise direction
@@ -128,7 +153,7 @@ int main(int argc, const char** argv)
         // 清空color和depth的framebuffer
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
         // 设置MVP矩阵
-        r.set_model(get_model_matrix(angle, x_pos, size));
+        r.set_model(get_model_matrix(angle_z, x_pos, size,any_angle,any_axis));
         r.set_view(get_view_matrix(eye_pos, eye_lookat, eye_up));
         r.set_projection(get_projection_matrix(45, 1, -0.1, -50));
 
@@ -144,7 +169,7 @@ int main(int argc, const char** argv)
     while (key != 27) {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        r.set_model(get_model_matrix(angle, x_pos, size));
+        r.set_model(get_model_matrix(angle_z, x_pos, size, any_angle,any_axis));
         r.set_view(get_view_matrix(eye_pos, eye_lookat, eye_up));
         r.set_projection(get_projection_matrix(45, 1, -0.1, -50));
 
@@ -158,10 +183,16 @@ int main(int argc, const char** argv)
         std::cout << "frame count: " << frame_count++ << '\n';
 
         if (key == 'a') {
-            angle += 10;
+            angle_z += 10;
         }
         else if (key == 'd') {
-            angle -= 10;
+            angle_z -= 10;
+        }
+        else if (key == 'o') {
+            any_angle -= 10;
+        }
+        else if (key == 'p') {
+            any_angle += 10;
         }
         else if (key == 'l') {
             x_pos -= 1;
