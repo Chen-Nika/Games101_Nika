@@ -43,6 +43,24 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 static bool insideTriangle(int x, int y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
+    // Inside the triangle?
+    //  1. Is the cross product of two vectors greater than 0.0f
+    //  2. If cross product = 0,
+    //      - At Left / Top edge, YES
+    //  2. If cross product > 0, YES
+    Vector3f edge0 = _v[1] - _v[0];
+    Vector3f edge1 = _v[2] - _v[1];
+    Vector3f edge2 = _v[0] - _v[2];
+    float w0,w1,w2;
+    // Cross product
+    w0 = edge0.y() * (x - _v[0].x()) - edge0.x() * (y - _v[0].y());
+    w1 = edge1.y() * (x - _v[1].x()) - edge1.x() * (y - _v[1].y());
+    w2 = edge2.y() * (x - _v[2].x()) - edge2.x() * (y - _v[2].y());
+    bool inside = true;
+    inside &= (w0 == 0.f ? ((edge0.y() == 0.f && edge0.x() <0.f) || (edge0.y() < 0.f)) : (w0 > 0.f));
+    inside &= (w1 == 0.f ? ((edge1.y() == 0.f && edge1.x() <0.f) || (edge1.y() < 0.f)) : (w1 > 0.f));
+    inside &= (w2 == 0.f ? ((edge2.y() == 0.f && edge2.x() <0.f) || (edge2.y() < 0.f)) : (w2 > 0.f));
+    return inside;
 }
 
 static std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector3f* v)
@@ -116,6 +134,8 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     //z_interpolated *= w_reciprocal;
 
     // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
+    
+
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
