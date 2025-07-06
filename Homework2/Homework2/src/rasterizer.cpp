@@ -81,9 +81,11 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
     float f2 = (50 + 0.1) / 2.0;
 
     Eigen::Matrix4f mvp = projection * view * model;
+    // Each element of the ind_buf is an array, representing the three vertex index IDs of a triangle
     for (auto& i : ind)
     {
         Triangle t;
+        // transform to clipping space
         Eigen::Vector4f v[] = {
                 mvp * to_vec4(buf[i[0]], 1.0f),
                 mvp * to_vec4(buf[i[1]], 1.0f),
