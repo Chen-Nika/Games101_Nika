@@ -50,11 +50,6 @@ static std::tuple<float, float, float> computeBarycentric2D(float x, float y, co
 
 static bool insideTriangle(int x, int y, const Vector3f* _v)
 {
-    auto [c1, c2, c3] = computeBarycentric2D(x + 0.5f, y + 0.5f, _v);
-    if (c1 > 0 && c1 < 1 && c2>0 && c2 < 1 && c3>0 && c3 < 1)
-        return true;
-    else
-        return false;
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
     // Reference: https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage.html
     // Inside the triangle?
@@ -67,9 +62,9 @@ static bool insideTriangle(int x, int y, const Vector3f* _v)
     Vector3f edge2 = _v[0] - _v[2];
     float w0,w1,w2;
     // Cross product
-    w0 = edge0.y() * (x - _v[0].x()) - edge0.x() * (y - _v[0].y());
-    w1 = edge1.y() * (x - _v[1].x()) - edge1.x() * (y - _v[1].y());
-    w2 = edge2.y() * (x - _v[2].x()) - edge2.x() * (y - _v[2].y());
+    w0 = edge0.x() * (y - _v[0].y()) - edge0.y() * (x - _v[0].x());
+    w1 = edge1.x() * (y - _v[1].y()) - edge1.y() * (x - _v[1].x());
+    w2 = edge2.x() * (y - _v[2].y()) - edge2.y() * (x - _v[2].x());
     bool inside = true;
     inside &= (w0 == 0.f ? ((edge0.y() == 0.f && edge0.x() <0.f) || (edge0.y() < 0.f)) : (w0 > 0.f));
     inside &= (w1 == 0.f ? ((edge1.y() == 0.f && edge1.x() <0.f) || (edge1.y() < 0.f)) : (w1 > 0.f));
@@ -131,16 +126,6 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
 //Screen space rasterization
 void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     auto v = t.toVector4();
-    // TODO : Find out the bounding box of current triangle.
-    // iterate through the pixel and find if the current pixel is inside the triangle
-
-    // If so, use the following code to get the interpolated z value.
-    //auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
-    //float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-    //float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-    //z_interpolated *= w_reciprocal;
-
-    // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
     // calculate bounding box
     float minX,maxX,minY,maxY;
     minX = maxX = v[0].x();
