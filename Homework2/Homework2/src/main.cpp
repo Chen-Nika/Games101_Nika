@@ -28,7 +28,7 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos, Eigen::Vector3f lookat,
         x[2], y[2], z[2], 0,
         0,    0,    0,    1;
     
-    view = rotation * translate;
+    view = rotation * translate * view;
 
     return view;
 }
@@ -204,8 +204,8 @@ int main(int argc, const char** argv)
         cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
         cv::imshow("image", image);
         key = cv::waitKey(10);
-
         std::cout << "frame count: " << frame_count++ << '\n';
+        
         // Rotate the camera around the Z-axis
         if (key == 'a') {
             angle_z += 10;
