@@ -8,9 +8,9 @@
 
 
 Triangle::Triangle() {
-    v[0] << 0,0,0;
-    v[1] << 0,0,0;
-    v[2] << 0,0,0;
+    v[0] << 0,0,0,0;
+    v[1] << 0,0,0,0;
+    v[2] << 0,0,0,0;
 
     color[0] << 0.0, 0.0, 0.0;
     color[1] << 0.0, 0.0, 0.0;
@@ -21,7 +21,7 @@ Triangle::Triangle() {
     tex_coords[2] << 0.0, 0.0;
 }
 
-void Triangle::setVertex(int ind, Vector3f ver){
+void Triangle::setVertex(int ind, Vector4f ver){
     v[ind] = ver;
 }
 void Triangle::setNormal(int ind, Vector3f n){
@@ -46,6 +46,6 @@ void Triangle::setTexCoord(int ind, float s, float t) {
 std::array<Vector4f, 3> Triangle::toVector4() const
 {
     std::array<Eigen::Vector4f, 3> res;
-    std::transform(std::begin(v), std::end(v), res.begin(), [](auto& vec) { return Eigen::Vector4f(vec.x(), vec.y(), vec.z(), 1.f); });
+    std::transform(std::begin(v), std::end(v), res.begin(), [](auto& vec) { return Eigen::Vector4f(vec.x(), vec.y(), vec.z(), vec.w()); });
     return res;
 }

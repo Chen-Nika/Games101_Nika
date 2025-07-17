@@ -77,7 +77,9 @@ namespace rst
     private:
         void draw_line(Eigen::Vector3f begin, Eigen::Vector3f end);
 
-        void rasterize_triangle(const Triangle& t);
+        void rasterize_triangle_noAA(const Triangle& t);
+        void rasterize_triangle_SSAA(const Triangle& t);
+        void rasterize_triangle_MSAA(const Triangle& t);
 
         // VERTEX SHADER -> MVP -> Clipping -> /.W -> VIEWPORT -> DRAWLINE/DRAWTRI -> FRAGSHADER
 
@@ -89,10 +91,16 @@ namespace rst
         std::map<int, std::vector<Eigen::Vector3f>> pos_buf;
         std::map<int, std::vector<Eigen::Vector3i>> ind_buf;
         std::map<int, std::vector<Eigen::Vector3f>> col_buf;
-
+        
         std::vector<Eigen::Vector3f> frame_buf;
-
         std::vector<float> depth_buf;
+        // Anti-aliasing
+        // AA factor
+        uint8_t AAFactor = 4;
+        // The buffers used for anti-aliasing sampling
+        std::vector<Eigen::Vector3f> frame_sample_buf;
+        std::vector<float> depth_sample_buf;
+        
         int get_index(int x, int y);
 
         int width, height;
