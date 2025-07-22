@@ -54,9 +54,9 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle, float x_pos, float size, 
     // Angle to radian
     float theta = DEG2RAD(rotation_angle);
     rotate_matrix <<
-        cos(theta), -sin(theta), 0, 0,
-        sin(theta), cos(theta), 0, 0,
-        0, 0, 1, 0,
+        cos(theta), 0, sin(theta), 0, 
+        0, 1, 0, 0,
+        -sin(theta), 0,  cos(theta), 0,
         0, 0, 0, 1;
 
     // Rotate around any axis passing through the origin

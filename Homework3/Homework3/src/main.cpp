@@ -32,7 +32,7 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos, Eigen::Vector3f lookat,
         0,    0,    0,    1;
     
     view = rotation * translate * view;
-
+    
     return view;
 }
 
@@ -57,11 +57,11 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle, float x_pos, float size, 
     // Angle to radian
     float theta = DEG2RAD(rotation_angle);
     rotate_matrix <<
-        cos(theta), -sin(theta), 0, 0,
-        sin(theta), cos(theta), 0, 0,
-        0, 0, 1, 0,
+        cos(theta), 0, sin(theta), 0, 
+        0, 1, 0, 0,
+        -sin(theta), 0,  cos(theta), 0,
         0, 0, 0, 1;
-
+  
     // Rotate around any axis passing through the origin
     Eigen::Matrix4f rotate_any_matrix = Eigen::Matrix4f::Identity();
     // Angle to radian
@@ -382,7 +382,7 @@ int main(int argc, const char** argv)
     
     r.set_vertex_shader(vertex_shader);
     r.set_fragment_shader(active_shader);
-
+    
     // 输入的指令字符
     int key = 0;
     // 运行的帧数
@@ -396,7 +396,7 @@ int main(int argc, const char** argv)
         r.set_model(get_model_matrix(angle_z, x_pos, size,any_angle,any_axis));
         r.set_view(get_view_matrix(eye_pos, eye_lookat, eye_up));
         r.set_projection(get_projection_matrix(45, 1, -0.1, -50));
-
+        
         r.draw(TriangleList);
         
         cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
