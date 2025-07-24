@@ -203,7 +203,17 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
     {
         // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
         // components are. Then, accumulate that result on the *result_color* object.
+        Eigen::Vector3f I_RR = light.intensity / (light.position - point).squaredNorm();
+        Eigen::Vector3f light_dir = (light.position - point).normalized();
+        Eigen::Vector3f view_dir = (eye_pos - point).normalized();
+        Eigen::Vector3f diffuse = kd.cwiseProduct(I_RR) * std::max(0.f, light_dir.dot(normal));
         
+        Eigen::Vector3f half_dir = (light_dir + view_dir).normalized();
+        Eigen::Vector3f specular = ks.cwiseProduct(I_RR) * std::pow(std::max(0.f, half_dir.dot(normal)), p);
+
+        Eigen::Vector3f ambient = ka.cwiseProduct(amb_light_intensity);
+
+        result_color+= diffuse + specular + ambient;
     }
 
     return result_color * 255.f;
@@ -307,7 +317,7 @@ int main(int argc, const char** argv)
     any_axis.normalize();
     float any_angle = 0;// The angle rotate around z-axis
     float x_pos = 0;
-    float size = 1.0f;
+    float size = 2.5f;
 
     
     bool command_line = false;
