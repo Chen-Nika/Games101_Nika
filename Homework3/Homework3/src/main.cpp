@@ -268,13 +268,16 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
     // Vector ln = (-dU, -dV, 1)
     // Normal n = normalize(TBN * ln)
     Eigen::Vector3f n = normal;
-    float x = normal.x();
-    float y = normal.y();
-    float z = normal.z();
-    Eigen::Vector3f t = {x*y/sqrt(x*x+z*z),sqrt(x*x+z*z),z*y/sqrt(x*x+z*z)};
-    Eigen::Vector3f b = n.cross(t);
     Eigen::Matrix3f TBN;
-    TBN<< t,b,n;
+    
+    // float x = normal.x();
+    // float y = normal.y();
+    // float z = normal.z();
+    // Eigen::Vector3f t = {x*y/sqrt(x*x+z*z),sqrt(x*x+z*z),z*y/sqrt(x*x+z*z)};
+    // Eigen::Vector3f b = n.cross(t);
+    // TBN<< t,b,n;
+    
+    TBN = payload.TBN;
     float dU = kh * kn * (payload.texture->getColor(payload.tex_coords.x()+ 1.f/payload.texture->width,payload.tex_coords.y()).norm() -payload.texture->getColor(payload.tex_coords.x(),payload.tex_coords.y()).norm());
     float dV = kh * kn * (payload.texture->getColor(payload.tex_coords.x(),payload.tex_coords.y() + + 1.f/payload.texture->height).norm() -payload.texture->getColor(payload.tex_coords.x(),payload.tex_coords.y()).norm());
     Eigen::Vector3f ln = {-dU, -dV, 1.f};

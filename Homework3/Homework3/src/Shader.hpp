@@ -15,8 +15,8 @@ struct fragment_shader_payload
         texture = nullptr;
     }
 
-    fragment_shader_payload(const Eigen::Vector3f& col, const Eigen::Vector3f& nor,const Eigen::Vector2f& tc, Texture* tex) :
-         color(col), normal(nor), tex_coords(tc), texture(tex) {}
+    fragment_shader_payload(const Eigen::Vector3f& col, const Eigen::Vector3f& nor,const Eigen::Vector2f& tc, Texture* tex, Eigen::Matrix3f tbn) :
+         color(col), normal(nor), tex_coords(tc), texture(tex), TBN(tbn) {}
 
 
     Eigen::Vector3f view_pos;
@@ -24,6 +24,7 @@ struct fragment_shader_payload
     Eigen::Vector3f normal;
     Eigen::Vector2f tex_coords;
     Texture* texture;
+    Eigen::Matrix3f TBN;
 };
 
 struct vertex_shader_payload

@@ -43,6 +43,12 @@ void Triangle::setColor(int ind, float r, float g, float b) {
 void Triangle::setTexCoord(int ind, Vector2f uv) {
     tex_coords[ind] = uv;
 }
+
+void Triangle::setTBN(int ind, Matrix3f tbn)
+{
+    TBN[ind] = tbn;
+}
+
 std::array<Vector4f, 3> Triangle::toVector4() const
 {
     std::array<Eigen::Vector4f, 3> res;
