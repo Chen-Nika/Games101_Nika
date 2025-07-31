@@ -191,7 +191,8 @@ Eigen::Matrix3f CalTBN(Eigen::Vector3f p0,Eigen::Vector3f p1,Eigen::Vector3f p2,
     Eigen::Vector3f T = (dv1 * E2 - dv2 * E1) / (dv1 * du2 - dv2 * du1);
     Eigen::Vector3f N = p0Normal.normalized();
     T = (T - T.dot(p0Normal)*N).normalized();
-    Eigen::Vector3f B = T.cross(N).normalized();
+    // Pay attention to the sequence of the right-hand screw rule. B needs to be obtained by N cross T
+    Eigen::Vector3f B = N.cross(T).normalized();
     Eigen::Matrix3f TBN = Eigen::Matrix3f::Identity();
     TBN << T, B, N;
     return TBN;
