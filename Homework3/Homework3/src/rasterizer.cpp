@@ -328,7 +328,10 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
         maxX = std::max(maxX, v[i].x());
         maxY = std::max(maxY, v[i].y());
     }
-
+    minX = std::clamp(minX, 0.f, (float)width);
+    minY = std::clamp(minY, 0.f, (float)height);
+    maxX = std::clamp(maxX, 0.f, (float)width);
+    maxY = std::clamp(maxY, 0.f, (float)height);
     for (int y= std::floor(minY); y < std::ceil(maxY); y++)
         for (int x= std::floor(minX); x < std::ceil(maxX); x++)
         {

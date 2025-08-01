@@ -155,7 +155,6 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
 
     float p = 150;
 
-    Eigen::Vector3f color = payload.color;
     Eigen::Vector3f point = payload.view_pos;
     Eigen::Vector3f normal = payload.normal;
 
@@ -188,6 +187,7 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
     {
         // TODO: Get the texture value at the texture coordinates of the current fragment
         return_color = payload.texture->getColor(payload.tex_coords[0],payload.tex_coords[1]);
+        // return_color = payload.texture->getColorBilinear(payload.tex_coords[0],payload.tex_coords[1]);
     }
     Eigen::Vector3f texture_color;
     texture_color << return_color.x(), return_color.y(), return_color.z();
@@ -206,7 +206,6 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
 
     float p = 150;
 
-    Eigen::Vector3f color = texture_color;
     Eigen::Vector3f point = payload.view_pos;
     Eigen::Vector3f normal = payload.normal;
 
@@ -374,6 +373,7 @@ int main(int argc, const char** argv)
     objl::Loader Loader;
     std::string obj_path = "../models/spot/";
     // Load .obj File
+    // bool loadout = Loader.LoadFile("../models/spot/spot_triangulated_good.obj");
     bool loadout = Loader.LoadFile("../models/spot/spot_triangulated_good.obj");
     for(auto mesh:Loader.LoadedMeshes)
     {
