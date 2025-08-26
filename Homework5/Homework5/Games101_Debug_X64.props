@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ImportGroup Label="PropertySheets" />
+    <PropertyGroup Label="UserMacros" />
+    <PropertyGroup>
+        <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)</OutDir>
+        <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(ProjectName)</IntDir>
+        <IncludePath>D:\Lib\opencv\build\include;D:\Lib;$(IncludePath)</IncludePath>
+        <LibraryPath>D:\Lib\opencv\build\x64\vc16\lib;$(LibraryPath)</LibraryPath>
+        <_PropertySheetDisplayName>Games101_Debug_X64</_PropertySheetDisplayName>
+    </PropertyGroup>
+    <ItemDefinitionGroup>
+        <Link>
+            <AdditionalDependencies>opencv_world4100d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        </Link>
+    </ItemDefinitionGroup>
+    <ItemGroup />
+</Project>
