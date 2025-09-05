@@ -15,21 +15,7 @@ int main(int argc, char** argv)
 {
     Scene scene(1280, 960);
     
-    std::string obj_path = "\\..\\models\\bunny\\bunny.obj";
-    char pathBuf[1000];
-    char* p;
-    if (GetModuleFileNameA(NULL, pathBuf, 1000))
-    {
-        p = strrchr(pathBuf, '\\');
-        if (p)
-        {
-            *p = '\0';
-            std::string exe_path = pathBuf;
-            obj_path = exe_path + obj_path;
-        }
-    }
-    MeshTriangle bunny(obj_path);
-    // MeshTriangle bunny("../models/bunny/bunny.obj");
+    MeshTriangle bunny("../models/bunny/bunny.obj");
 
     scene.Add(&bunny);
     scene.Add(std::make_unique<Light>(Vector3f(-20, 70, 20), 1));

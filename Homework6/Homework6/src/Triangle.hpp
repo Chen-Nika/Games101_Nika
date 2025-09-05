@@ -5,7 +5,6 @@
 #include "Material.hpp"
 #include "OBJ_Loader.hpp"
 #include "Object.hpp"
-#include "Triangle.hpp"
 #include <cassert>
 #include <array>
 
@@ -232,14 +231,15 @@ inline Intersection Triangle::getIntersection(Ray ray)
     t_tmp = dotProduct(e2, qvec) * det_inv;
 
     // TODO find ray triangle intersection
-    if (t_tmp < 0)
-        return inter;
-    inter.distance = t_tmp;//光线经过的时间
-    inter.happened = true;//是否与三角形相交
-    inter.m = m;//三角形的材质
-    inter.obj = this;//Triangle继承了Object，重写了virtual Intersection getIntersection(Ray _ray)，三角形调用getIntersection(Ray _ray)，intersection自然记录下当前在相交的三角形，所以用this
-    inter.normal = normal;//三角形面的法线
-    inter.coords = ray(t_tmp);//Vector3f operator()(double t) const{return origin+direction*t;} in Ray.hpp, coords表示相交点的坐标
+    if (t_tmp >= EPSILON)
+    {
+        inter.distance = t_tmp;//The time t of light movement is equal to the distance from the intersection point to the origin of the light source
+        inter.happened = true;
+        inter.m = m;
+        inter.obj = this;
+        inter.normal = normal;
+        inter.coords = ray(t_tmp);//Vector3f operator()(double t) const{return origin+direction*t;} in Ray.hpp
+    }
     return inter;
 
 }
