@@ -12,7 +12,7 @@ BVHAccel::BVHAccel(std::vector<Object*> p, int maxPrimsInNode,
     if (primitives.empty())
         return;
 
-    root = recursiveBuild(primitives);
+    root = recursiveBuild(primitives, SplitMethod::SAH);
 
     time(&stop);
     double diff = difftime(stop, start);
@@ -25,7 +25,7 @@ BVHAccel::BVHAccel(std::vector<Object*> p, int maxPrimsInNode,
         hrs, mins, secs);
 }
 
-BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
+BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects, SplitMethod splitMethod)
 {
     BVHBuildNode* node = new BVHBuildNode();
 
@@ -33,6 +33,7 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
     Bounds3 bounds;
     for (int i = 0; i < objects.size(); ++i)
         bounds = Union(bounds, objects[i]->getBounds());
+    // Only one object,create a leaf node for it
     if (objects.size() == 1) {
         // Create leaf _BVHBuildNode_
         node->bounds = objects[0]->getBounds();
@@ -41,9 +42,10 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
         node->right = nullptr;
         return node;
     }
+    // Two objects, stored separately in the left and the right leaf node
     else if (objects.size() == 2) {
-        node->left = recursiveBuild(std::vector{objects[0]});
-        node->right = recursiveBuild(std::vector{objects[1]});
+        node->left = recursiveBuild(std::vector{objects[0]},splitMethod);
+        node->right = recursiveBuild(std::vector{objects[1]},splitMethod);
 
         node->bounds = Union(node->left->bounds, node->right->bounds);
         return node;
@@ -74,20 +76,71 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
             });
             break;
         }
+        switch (splitMethod)
+        {
+        case SplitMethod::NAIVE:
+            {
+                auto beginning = objects.begin();
+                auto middling = objects.begin() + (objects.size() / 2);
+                auto ending = objects.end();
 
-        auto beginning = objects.begin();
-        auto middling = objects.begin() + (objects.size() / 2);
-        auto ending = objects.end();
+                auto leftshapes = std::vector<Object*>(beginning, middling);
+                auto rightshapes = std::vector<Object*>(middling, ending);
 
-        auto leftshapes = std::vector<Object*>(beginning, middling);
-        auto rightshapes = std::vector<Object*>(middling, ending);
+                assert(objects.size() == (leftshapes.size() + rightshapes.size()));
 
-        assert(objects.size() == (leftshapes.size() + rightshapes.size()));
+                node->left = recursiveBuild(leftshapes,splitMethod);
+                node->right = recursiveBuild(rightshapes,splitMethod);
 
-        node->left = recursiveBuild(leftshapes);
-        node->right = recursiveBuild(rightshapes);
+                node->bounds = Union(node->left->bounds, node->right->bounds);
+            }
+            break;
+        case SplitMethod::SAH:
+            {
+                int bukects = 10;
+                float travelCost = 0.125f;
+                float minCost = std::numeric_limits<float>::max();
+                int minIndex = 0;
+                double SN = centroidBounds.SurfaceArea();
+                // Try to find the bucket index with the lowest cost
+                for (int b = 0; b < bukects; ++b)
+                {
+                    auto beginning = objects.begin();
+                    auto middling = objects.begin() + (objects.size() * b / bukects);
+                    auto ending = objects.end();
+                    auto leftshapes = std::vector<Object*>(beginning, middling);
+                    auto rightshapes = std::vector<Object*>(middling, ending);
+                    Bounds3 boundL;
+                    for (auto object : leftshapes)
+                        boundL = Union(boundL, object->getBounds());
+                    double SL = boundL.SurfaceArea();
+                    Bounds3 boundR;
+                    for (auto object : rightshapes)
+                        boundR = Union(boundR, object->getBounds());
+                    double SR = boundR.SurfaceArea();
+                    float cost = SL / SN * leftshapes.size() +  SR / SN * rightshapes.size() + travelCost;
+                    if (cost < minCost)
+                    {
+                        minCost = cost;
+                        minIndex = b;
+                    }
+                }
+                auto beginning = objects.begin();
+                auto middling = objects.begin() + (objects.size() * minIndex / bukects);
+                auto ending = objects.end();
 
-        node->bounds = Union(node->left->bounds, node->right->bounds);
+                auto leftshapes = std::vector<Object*>(beginning, middling);
+                auto rightshapes = std::vector<Object*>(middling, ending);
+
+                assert(objects.size() == (leftshapes.size() + rightshapes.size()));
+
+                node->left = recursiveBuild(leftshapes,splitMethod);
+                node->right = recursiveBuild(rightshapes,splitMethod);
+
+                node->bounds = Union(node->left->bounds, node->right->bounds);
+            }
+            break;
+        }
     }
 
     return node;
