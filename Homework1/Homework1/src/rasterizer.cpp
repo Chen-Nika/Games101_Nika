@@ -42,49 +42,62 @@ void rst::rasterizer::draw_line(Eigen::Vector3f begin, Eigen::Vector3f end)
     dy=y2-y1;
     dx1=fabs(dx);
     dy1=fabs(dy);
-    px=2*dy1-dx1;
-    py=2*dx1-dy1;
-
+    // f(x+1,y+0.5) = (y1-y2) + 0.5(x2-x1) = -dy1 + 0.5*dx1
+    // To reduce the computational cost of floating-point numbers, all were multiplied by 2.
+    // f(x+1,y+0.5) Multiplying by 2 will not affect the sign, so we got -2dy1+dx1
+    px=-2*dy1+dx1;
+    py=-2*dx1+dy1;
+    //Case |k| <= 1 : 0<k<=1 or -1<=k<0
     if(dy1<=dx1)
     {
+        // 0<k<1
         if(dx>=0)
         {
-            x=x1;
-            y=y1;
-            xe=x2;
+            x=x1;// x begin
+            y=y1;// y begin
+            xe=x2;// x end
         }
+        // -1<k<0
         else
         {
-            x=x2;
-            y=y2;
-            xe=x1;
+            x=x2;// x begin
+            y=y2;// y begin
+            xe=x1;// x end (from left to right)
         }
+        // Draw the first point
         Eigen::Vector3f point = Eigen::Vector3f(x, y, 1.0f);
         set_pixel(point,line_color);
+        // Draw the line from left to right
+        // When 0<k<1: x1 -> x2
+        // When -1<k<0: x2 -> x1
         for(i=0;x<xe;i++)
         {
             x=x+1;
-            if(px<0)
+            // The midpoint is above the line
+            if(px>0)
             {
                 px=px+2*dy1;
             }
+            // The midpoint is below the line, so y=y+1
             else
             {
+                // 0<k<1 from left to right
                 if((dx<0 && dy<0) || (dx>0 && dy>0))
                 {
                     y=y+1;
                 }
+                // -1<k<0 from left to right
                 else
                 {
                     y=y-1;
                 }
                 px=px+2*(dy1-dx1);
             }
-//            delay(0);
             Eigen::Vector3f point = Eigen::Vector3f(x, y, 1.0f);
             set_pixel(point,line_color);
         }
     }
+    //Case |k| > 1 : k>1 or k<-1
     else
     {
         if(dy>=0)
@@ -104,7 +117,7 @@ void rst::rasterizer::draw_line(Eigen::Vector3f begin, Eigen::Vector3f end)
         for(i=0;y<ye;i++)
         {
             y=y+1;
-            if(py<=0)
+            if(py>=0)
             {
                 py=py+2*dx1;
             }
@@ -120,7 +133,6 @@ void rst::rasterizer::draw_line(Eigen::Vector3f begin, Eigen::Vector3f end)
                 }
                 py=py+2*(dx1-dy1);
             }
-//            delay(0);
             Eigen::Vector3f point = Eigen::Vector3f(x, y, 1.0f);
             set_pixel(point,line_color);
         }
