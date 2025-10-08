@@ -11,7 +11,7 @@
     </PropertyGroup>
     <ItemDefinitionGroup>
         <Link>
-            <AdditionalDependencies>opencv_world4100d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+            <AdditionalDependencies>opencv_world4100.lib;%(AdditionalDependencies)</AdditionalDependencies>
         </Link>
     </ItemDefinitionGroup>
     <ItemGroup />

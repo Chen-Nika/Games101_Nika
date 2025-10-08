@@ -163,14 +163,17 @@ Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &
     switch(m_type){
         case DIFFUSE:
         {
-            // calculate the contribution of diffuse   model
+            // calculate the contribution of diffuse model
+            // If the reflection direction is in the positive hemisphere, then return diffuse brdf = albedo(kd)/ PI
             float cosalpha = dotProduct(N, wo);
             if (cosalpha > 0.0f) {
                 Vector3f diffuse = Kd / M_PI;
                 return diffuse;
             }
             else
+            {
                 return Vector3f(0.0f);
+            }
             break;
         }
     }

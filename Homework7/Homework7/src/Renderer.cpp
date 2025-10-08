@@ -32,7 +32,7 @@ void Renderer::Render(const Scene& scene)
     std::vector<std::thread> threads(threadNum);
 
     // change the spp value to change sample ammount
-    int spp = 64;
+    int spp = 128;
     std::cout << "SPP: " << spp << "\n";
     std::mutex mtx;
     float process = 0.f;
@@ -45,8 +45,10 @@ void Renderer::Render(const Scene& scene)
                     float x = (2 * (i + 0.5) / (float)scene.width - 1) *
                         imageAspectRatio * scale;
                     float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
-
+                    // Why -x,y,1 vs x,y,-1( in assignment 5)?
+                    // In this framework, the camera is looking at the positive direction of Z-axis
                     Vector3f dir = normalize(Vector3f(-x, y, 1));
+
                     for (int k = 0; k < spp; k++) {
                         framebuffer[j*scene.width+i] += scene.castRay(Ray(eye_pos, dir), 0) / spp;
                     }

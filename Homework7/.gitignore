@@ -1,4 +1,5 @@
-.idea/*
-.vs/*
-bin/*
-bin-int/*
+.idea/
+.vs/
+bin/
+bin-int/
+x64/

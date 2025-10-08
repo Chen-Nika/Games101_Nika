@@ -69,7 +69,7 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
     {
         Vector3f p = shadePoint.coords;// Position of shading point
         Material* pm = shadePoint.m;
-        Vector3f wo = -normalize(ray.direction);// View direction
+        Vector3f wo = normalize(-ray.direction);// View direction
         Vector3f N = normalize(shadePoint.normal);// Normal vector of shading point
         Vector3f lightDir(0), lightIndir(0);
         
@@ -91,14 +91,19 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
             pOffset= p - EPSILON * N;
         // Determine whether there is any block between two points
         Intersection blockInsct = intersect(Ray(pOffset, ws));
-        if (abs(distancePtoX - blockInsct.distance) < 0.01)
+        float cosine = dotProduct(ws, N);
+        // cosine >EPSILON, avoid back direct lighting
+        if (abs(distancePtoX - blockInsct.distance) < 0.01f && cosine >EPSILON)
         {
-            lightDir = emit * pm->eval(wo, ws, N) * dotProduct(ws, N) * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
+            lightDir = emit * pm->eval(ws, wo, N) * cosine * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
         }
-        /*if (abs(distancePtoX - blockInsct.distance) < 0.01)
-        {
-            lightDir = emit * pm->eval(wo, ws, N) * dotProduct(ws, N) * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
-        }*/
+
+        // Intersection blockInsct = intersect(Ray(p, ws));
+        // if (blockInsct.distance - distancePtoX > -0.01f )
+        // {
+        //     lightDir = emit * pm->eval(ws, wo, N) * dotProduct(ws, N) * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
+        // }
+        
         // Sample indirect illumination
         float ksi = get_random_float();
         if (ksi < RussianRoulette)
