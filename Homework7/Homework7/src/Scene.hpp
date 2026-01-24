@@ -17,11 +17,16 @@ class Scene
 {
 public:
     // setting up options
+    // Screen resolution
     int width = 512;
     int height = 512;
+    // field of view (degree)
     double fov = 40;
+    // Solid color background
     Vector3f backgroundColor = Vector3f(0.235294, 0.67451, 0.843137);
+    // Useless parameter
     int maxDepth = 1;
+    // The probability that the light continues to bounce, Russian roulette
     float RussianRoulette = 0.8;
 
     Scene(int w, int h) : width(w), height(h)
@@ -80,14 +85,14 @@ public:
 
 
     // Compute Fresnel equation
-//
-// \param I is the incident view direction
-//
-// \param N is the normal at the intersection point
-//
-// \param ior is the material refractive index
-//
-// \param[out] kr is the amount of light reflected
+    //
+    // \param I is the incident view direction
+    //
+    // \param N is the normal at the intersection point
+    //
+    // \param ior is the material refractive index
+    //
+    // \param[out] kr is the amount of light reflected
     void fresnel(const Vector3f &I, const Vector3f &N, const float &ior, float &kr) const
     {
         float cosi = clamp(-1, 1, dotProduct(I, N));

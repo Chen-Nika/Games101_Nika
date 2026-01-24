@@ -55,6 +55,7 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
         for (int i = 0; i < objects.size(); ++i)
             centroidBounds =
                 Union(centroidBounds, objects[i]->getBounds().Centroid());
+        // Sort primitives along the selected longest axis
         int dim = centroidBounds.maxExtent();
         switch (dim) {
         case 0:

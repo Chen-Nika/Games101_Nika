@@ -11,7 +11,7 @@ const float kInfinity = std::numeric_limits<float>::max();
 
 inline float clamp(const float &lo, const float &hi, const float &v)
 { return std::max(lo, std::min(hi, v)); }
-
+// Solving quadratic equations with one variable
 inline  bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1)
 {
     float discr = b * b - 4 * a * c;
@@ -22,21 +22,22 @@ inline  bool solveQuadratic(const float &a, const float &b, const float &c, floa
                   -0.5 * (b + sqrt(discr)) :
                   -0.5 * (b - sqrt(discr));
         x0 = q / a;
-        x1 = c / q;
+        x1 = c / q;// By Vieta's formula
     }
     if (x0 > x1) std::swap(x0, x1);
     return true;
 }
-
+// Generate a random float number in range [0,1]
 inline float get_random_float()
 {
-    static std::random_device dev;
-    static std::mt19937 rng(dev());
-    static std::uniform_real_distribution<float> dist(0.f, 1.f); // distribution in range [1, 6]
+    static std::random_device dev;// Random seed
+    static std::mt19937 rng(dev()); // Mersenne Twister RNG —— Psedorandom generator
+    static std::uniform_real_distribution<float> dist(0.f, 1.f); // distribution in range [0, 1]
 
     return dist(rng);
 }
 
+// Update the progress bar in the console
 inline void UpdateProgress(float progress)
 {
     int barWidth = 70;

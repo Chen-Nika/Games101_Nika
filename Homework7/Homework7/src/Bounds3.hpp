@@ -28,6 +28,7 @@ class Bounds3
     }
 
     Vector3f Diagonal() const { return pMax - pMin; }
+    /* Return the dimension with largest length */
     int maxExtent() const
     {
         Vector3f d = Diagonal();
@@ -38,7 +39,7 @@ class Bounds3
         else
             return 2;
     }
-
+    /* Return surface area of the bounding box */
     double SurfaceArea() const
     {
         Vector3f d = Diagonal();
@@ -46,6 +47,8 @@ class Bounds3
     }
 
     Vector3f Centroid() { return 0.5 * pMin + 0.5 * pMax; }
+    
+    /* Return the intersection with another bounding box */
     Bounds3 Intersect(const Bounds3& b)
     {
         return Bounds3(Vector3f(fmax(pMin.x, b.pMin.x), fmax(pMin.y, b.pMin.y),
@@ -53,7 +56,7 @@ class Bounds3
                        Vector3f(fmin(pMax.x, b.pMax.x), fmin(pMax.y, b.pMax.y),
                                 fmin(pMax.z, b.pMax.z)));
     }
-
+    
     Vector3f Offset(const Vector3f& p) const
     {
         Vector3f o = p - pMin;
@@ -65,7 +68,7 @@ class Bounds3
             o.z /= pMax.z - pMin.z;
         return o;
     }
-
+    /* Determine whether the two bounding boxes overlap */
     bool Overlaps(const Bounds3& b1, const Bounds3& b2)
     {
         bool x = (b1.pMax.x >= b2.pMin.x) && (b1.pMin.x <= b2.pMax.x);
@@ -73,12 +76,13 @@ class Bounds3
         bool z = (b1.pMax.z >= b2.pMin.z) && (b1.pMin.z <= b2.pMax.z);
         return (x && y && z);
     }
-
+    /* Determine whether a point is inside the bounding box */
     bool Inside(const Vector3f& p, const Bounds3& b)
     {
         return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y &&
                 p.y <= b.pMax.y && p.z >= b.pMin.z && p.z <= b.pMax.z);
     }
+    
     inline const Vector3f& operator[](int i) const
     {
         return (i == 0) ? pMin : pMax;
@@ -104,9 +108,12 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     }
     float tEnter = std::max(tMin.x, std::max(tMin.y, tMin.z));
     float tExit = std::min(tMax.x, std::min(tMax.y, tMax.z));
+    // tExit must be larger than tEnter
+    // and tExit must be larger than 0(EPSILON) which means the intersection is in front of the ray starting point
     return tExit >= tEnter && tExit > EPSILON;
 }
 
+/* Return the union of two bounding boxes */
 inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)
 {
     Bounds3 ret;
@@ -115,6 +122,7 @@ inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)
     return ret;
 }
 
+/* Return the union of a bounding box and a new point */
 inline Bounds3 Union(const Bounds3& b, const Vector3f& p)
 {
     Bounds3 ret;
