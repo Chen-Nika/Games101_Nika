@@ -104,6 +104,8 @@ public:
         Vector3f max_vert = Vector3f{-std::numeric_limits<float>::infinity(),
                                      -std::numeric_limits<float>::infinity(),
                                      -std::numeric_limits<float>::infinity()};
+        std::cout<< mesh.Vertices.size() << " vertices\n";
+        std::cout<< mesh.Indices.size() << " indices\n";
         for (int i = 0; i < mesh.Vertices.size(); i += 3) {
             std::array<Vector3f, 3> face_vertices;
 

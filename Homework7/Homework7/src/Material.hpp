@@ -118,11 +118,11 @@ public:
     inline Vector3f getEmission();
     inline bool hasEmission();
 
-    // sample a ray by Material properties
+    // sample a ray by Material properties in hemisphere
     inline Vector3f sample(const Vector3f& wi, const Vector3f& N);
     // given a ray, calculate the PdF of this ray
     inline float pdf(const Vector3f& wi, const Vector3f& wo, const Vector3f& N);
-    // given a ray, calculate the contribution of this ray
+    // BRDF, given a ray, calculate the contribution of this ray
     inline Vector3f eval(const Vector3f& wi, const Vector3f& wo, const Vector3f& N);
 };
 
@@ -196,6 +196,7 @@ Vector3f Material::eval(const Vector3f& wi, const Vector3f& wo, const Vector3f& 
         {
             // calculate the contribution of diffuse model
             // If the reflection direction is in the positive hemisphere, then return diffuse brdf = albedo(kd)/ PI
+            // albedo(kd) is the percentage of incoming light that is reflected by the surface, which can be understood as the color of the object
             float cosalpha = dotProduct(N, wo);
             if (cosalpha > 0.0f)
             {
