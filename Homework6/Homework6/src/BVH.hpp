@@ -38,7 +38,7 @@ public:
     BVHBuildNode* root;
 
     // BVHAccel Private Methods
-    BVHBuildNode* recursiveBuild(std::vector<Object*>objects, SplitMethod splitMethod = SplitMethod::NAIVE);
+    BVHBuildNode* recursiveBuild(std::vector<Object*>objects);
     
     // BVHAccel Private Data
     const int maxPrimsInNode;
