@@ -2,6 +2,8 @@
 #include <cassert>
 #include "BVH.hpp"
 
+#include <numeric>
+
 BVHAccel::BVHAccel(std::vector<Object*> p, int maxPrimsInNode,
                    SplitMethod splitMethod)
     : maxPrimsInNode(std::min(255, maxPrimsInNode)), splitMethod(splitMethod),
@@ -77,9 +79,43 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
             });
             break;
         }
-
+        int mid = objects.size() / 2;
+        switch (splitMethod)
+        {
+            case SplitMethod::NAIVE:
+                // do nothing, already sorted
+                break;
+            case SplitMethod::SAH:
+                int buckets = 10;// number of buckets
+                float costMin = std::numeric_limits<float>::max();
+                float areaAll = bounds.SurfaceArea();
+                for (int i =0; i<buckets; ++i)
+                {
+                    int m = i*objects.size()/buckets;
+                    auto leftshapes = std::vector<Object*>(objects.begin(), objects.begin() + m);
+                    auto rightshapes = std::vector<Object*>(objects.begin() + m, objects.end());
+                    Bounds3 leftBound = std::accumulate(leftshapes.begin(), leftshapes.end(), Bounds3{}, [](const Bounds3& b, Object* o)
+                    {
+                        return Union(b, o->getBounds());
+                    });
+                    Bounds3 rightBound = std::accumulate(rightshapes.begin(), rightshapes.end(), Bounds3{}, [](const Bounds3& b, Object* o)
+                    {
+                        return Union(b, o->getBounds());
+                    });
+                    float areaLeft = leftBound.SurfaceArea();
+                    float areaRight = rightBound.SurfaceArea();
+                    float cost = areaLeft / areaAll * leftshapes.size() + areaRight / areaAll * rightshapes.size() + 0.125f;
+                    if (cost < costMin)
+                    {
+                        costMin = cost;
+                        mid = m;
+                    }
+                }
+                break;
+                
+        }
         auto beginning = objects.begin();
-        auto middling = objects.begin() + (objects.size() / 2);
+        auto middling = objects.begin() + mid;
         auto ending = objects.end();
 
         auto leftshapes = std::vector<Object*>(beginning, middling);
@@ -111,8 +147,10 @@ Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
     // TODO Traverse the BVH to find intersection
     Intersection intersection;
     const std::array<int, 3>& dirIsNeg = {(int)(ray.direction.x > 0),(int)(ray.direction.y > 0),(int)(ray.direction.z > 0)};
+    // if node is null or ray doesn't intersect the bounding box, return an empty intersection
     if (node == nullptr || !node->bounds.IntersectP(ray,ray.direction_inv,dirIsNeg))
         return intersection;
+    // if the node is a leaf node, intersects the ray with the objects in the node
     if (node->left == nullptr && node->right == nullptr)// Or: if (node->object != nullptr)
         return node->object->getIntersection(ray);
     

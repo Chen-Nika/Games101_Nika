@@ -60,17 +60,17 @@ public:
 
 
 
-// Compute refraction direction using Snell's law
-//
-// We need to handle with care the two possible situations:
-//
-//    - When the ray is inside the object
-//
-//    - When the ray is outside.
-//
-// If the ray is outside, you need to make cosi positive cosi = -N.I
-//
-// If the ray is inside, you need to invert the refractive indices and negate the normal N
+    // Compute refraction direction using Snell's law
+    //
+    // We need to handle with care the two possible situations:
+    //
+    //    - When the ray is inside the object
+    //
+    //    - When the ray is outside.
+    //
+    // If the ray is outside, you need to make cosi positive cosi = -N.I
+    //
+    // If the ray is inside, you need to invert the refractive indices and negate the normal N
     Vector3f refract(const Vector3f &I, const Vector3f &N, const float &ior) const
     {
         float cosi = clamp(-1, 1, dotProduct(I, N));

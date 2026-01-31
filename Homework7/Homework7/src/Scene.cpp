@@ -14,7 +14,7 @@ Intersection Scene::intersect(const Ray &ray) const
 {
     return this->bvh->Intersect(ray);
 }
-
+// Sample a light source in the scene, return the intersection information and the PDF value
 void Scene::sampleLight(Intersection &pos, float &pdf) const
 {
     float emit_area_sum = 0;
@@ -23,11 +23,13 @@ void Scene::sampleLight(Intersection &pos, float &pdf) const
             emit_area_sum += objects[k]->getArea();
         }
     }
+    // Get a random number in [0, emit_area_sum)
     float shadePoint = get_random_float() * emit_area_sum;
     emit_area_sum = 0;
     for (uint32_t k = 0; k < objects.size(); ++k) {
         if (objects[k]->hasEmit()){
             emit_area_sum += objects[k]->getArea();
+            // When the random number is less than the sum area, the corresponding light source is selected
             if (shadePoint <= emit_area_sum){
                 objects[k]->Sample(pos, pdf);
                 break;
@@ -57,7 +59,7 @@ bool Scene::trace(
     return (*hitObject != nullptr);
 }
 
- //Implementation of Path Tracing
+//Implementation of Path Tracing
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     // TO DO Implement Path Tracing Algorithm here
