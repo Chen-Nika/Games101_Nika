@@ -9,7 +9,7 @@
 
 #include <thread>
 #include <mutex>
-
+#define _USE_MULTITHREAD 0
 
 inline float deg2rad(const float& deg) { return deg * M_PI / 180.0; }
 
@@ -26,17 +26,22 @@ void Renderer::Render(const Scene& scene)
     float imageAspectRatio = scene.width / (float)scene.height;
     Vector3f eye_pos(278, 273, -800);
 
+    
+
+    // change the spp value to change sample ammount
+    int spp = 32;
+    std::cout << "SPP: " << spp << "\n";
+    
+    float process = 0.f;
+    
+#if _USE_MULTITHREAD
     int threadNum = 32;
     // The height of screen must be a multiple of the number of the threads
     int windowHeight = scene.height / threadNum;
     std::vector<std::thread> threads(threadNum);
-
-    // change the spp value to change sample ammount
-    int spp = 128;
-    std::cout << "SPP: " << spp << "\n";
-    std::mutex mtx;
-    float process = 0.f;
     float step = 1.f / scene.height;
+    std::mutex mtx;
+    
     auto castRay = [&](int threadIndex)
         {
             for (uint32_t j = threadIndex * windowHeight; j < (threadIndex+1) * windowHeight; ++j) {
@@ -71,24 +76,26 @@ void Renderer::Render(const Scene& scene)
         threads[t].join();
     }
     UpdateProgress(1.f);
+#else
+    int m =0;
+    for (uint32_t j = 0; j < scene.height; ++j) {
+        for (uint32_t i = 0; i < scene.width; ++i) {
+            // generate primary ray direction
+            float x = (2 * (i + 0.5) / (float)scene.width - 1) *
+                      imageAspectRatio * scale;
+            float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
 
-    //for (uint32_t j = 0; j < scene.height; ++j) {
-    //    for (uint32_t i = 0; i < scene.width; ++i) {
-    //        // generate primary ray direction
-    //        float x = (2 * (i + 0.5) / (float)scene.width - 1) *
-    //                  imageAspectRatio * scale;
-    //        float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
-
-    //        Vector3f dir = normalize(Vector3f(-x, y, 1));
-    //        for (int k = 0; k < spp; k++){
-    //            framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;  
-    //        }
-    //        m++;
-    //    }
-    //    UpdateProgress(j / (float)scene.height);
-    //}
-    //UpdateProgress(1.f);
-
+            Vector3f dir = normalize(Vector3f(-x, y, 1));
+            for (int k = 0; k < spp; k++){
+                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;  
+            }
+            m++;
+        }
+        UpdateProgress(j / (float)scene.height);
+    }
+    UpdateProgress(1.f);
+#endif
+    
     // save framebuffer to file
     FILE* fp = fopen("binary.ppm", "wb");
     (void)fprintf(fp, "P6\n%d %d\n255\n", scene.width, scene.height);
