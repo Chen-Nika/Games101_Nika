@@ -99,12 +99,6 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         {
             lightDir = emit * pm->eval(ws, wo, N) * cosine * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
         }
-
-        // Intersection blockInsct = intersect(Ray(p, ws));
-        // if (blockInsct.distance - distancePtoX > -0.01f )
-        // {
-        //     lightDir = emit * pm->eval(ws, wo, N) * dotProduct(ws, N) * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
-        // }
         
         // Sample indirect illumination
         float ksi = get_random_float();

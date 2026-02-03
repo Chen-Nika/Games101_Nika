@@ -158,7 +158,7 @@ Vector3f Material::sample(const Vector3f& wi, const Vector3f& N)
             // Uniform sample on the hemisphere
             // x_1 controls the height (z_axis), x_2 controls the azimuth phi (rotation around the z-axis)
             float x_1 = get_random_float(), x_2 = get_random_float();
-            //TODO:  replace by float z = x_1;
+            // map x_1 from [0,1] to [-1,1] on the entire sphere, then take the absolute value to obtain z on the upper hemisphere
             float z = std::fabs(1.0f - 2.0f * x_1);
             // Calculate the projection radius (r) on the XY plane and the azimuth angle (phi)
             float r = std::sqrt(1.0f - z * z), phi = 2 * M_PI * x_2;
