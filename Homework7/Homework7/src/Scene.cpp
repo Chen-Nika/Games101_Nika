@@ -74,15 +74,6 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         Vector3f N = normalize(shadePoint.normal);// Normal vector of shading point
         Vector3f lightDir(0), lightIndir(0);
         
-        // Sample direct illumination
-        Intersection lightInsct;
-        float pdfLight;
-        sampleLight(lightInsct, pdfLight);
-        Vector3f x = lightInsct.coords;// The coordinates of the sampling point on the light source surface
-        Vector3f ws = normalize(x - p);// The direction from shading point to light sampling point
-        Vector3f NN = normalize(lightInsct.normal);// The normal vector of the light sampling point
-        Vector3f emit = lightInsct.emit;
-        float distancePtoX = (x-p).norm();// The distance between shading point and light sampling point
         // Avoid self-intersection between the shadow ray and the object itself due to floating-point number precision issue
         // Raise the coordinates a little towards/backwards the normal direction
         Vector3f pOffset;
@@ -90,34 +81,71 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
             pOffset= p + EPSILON * N;
         else
             pOffset= p - EPSILON * N;
-        // Determine whether there is any block between two points
-        Intersection blockInsct = intersect(Ray(pOffset, ws));
-        float cosine = dotProduct(ws, N);
-        // cosine >EPSILON, avoid back direct lighting
-        if (abs(distancePtoX - blockInsct.distance) < 0.01f && cosine >EPSILON)
-        {
-            // 正常来说，brdf传入的应该是入射光和出射光，但根据亥姆霍兹可逆性(Helmholtz Reciprocity)，两者相反结果不变
-            // 但这里有个坑，eval这个brdf函数中期望传入的入射光是inward的(由光源指向着色点)，而非outward
-            // 因此调用方式有2个：pm->eval(wo, ws, N) 或者 pm->eval(-ws, -wo, N)
-            lightDir = emit * pm->eval(wo, ws, N) * cosine * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
-        }
         
-        // Sample indirect illumination
-        float ksi = get_random_float();
-        if (ksi < RussianRoulette)
+        switch (pm->getType())
         {
-            Vector3f wi = normalize(pm->sample(wo,N));
-            // Determine whether the hit object is an emitting object
-            Ray bounceRay = Ray(pOffset, wi);
-            Intersection bounceInsct = intersect(bounceRay);
-            if (bounceInsct.happened && !bounceInsct.obj->hasEmit())
+        case MIRROR:
             {
-                float pdf = pm->pdf(wo, wi, N);
-                if (pdf>EPSILON)
-					lightIndir = castRay(bounceRay, depth + 1) * pm->eval(wo, wi, N) * dotProduct(wi, N) / (pdf * RussianRoulette);
+                // 完美镜面反射不需要直接光采样
+                // Sample indirect illumination
+                float ksi = get_random_float();
+                if (ksi < RussianRoulette)
+                {
+                    Vector3f wi = normalize(pm->sample(wo,N));
+                    // Determine whether the hit object is an emitting object
+                    Ray bounceRay = Ray(pOffset, wi);
+                    Intersection bounceInsct = intersect(bounceRay);
+                    // 因为没有单独计算直接光，所以这里无需判断 !bounceInsct.obj->hasEmit()
+                    if (bounceInsct.happened)
+                    {
+                        float pdf = pm->pdf(wo, wi, N);
+                        if (pdf>EPSILON)
+                            lightIndir = castRay(bounceRay, depth + 1) * pm->eval(wo, wi, N) * dotProduct(wi, N) / (pdf * RussianRoulette);
+                    }
+                }
+                break;
+            }
+        default:
+            {
+                // Sample direct illumination
+                Intersection lightInsct;
+                float pdfLight;
+                sampleLight(lightInsct, pdfLight);
+                Vector3f x = lightInsct.coords;// The coordinates of the sampling point on the light source surface
+                Vector3f ws = normalize(x - p);// The direction from shading point to light sampling point
+                Vector3f NN = normalize(lightInsct.normal);// The normal vector of the light sampling point
+                Vector3f emit = lightInsct.emit;
+                float distancePtoX = (x-p).norm();// The distance between shading point and light sampling point
+                // Determine whether there is any block between two points
+                Intersection blockInsct = intersect(Ray(pOffset, ws));
+                float cosine = dotProduct(ws, N);
+                // cosine >EPSILON, avoid back direct lighting
+                if (abs(distancePtoX - blockInsct.distance) < 0.01f && cosine >EPSILON)
+                {
+                    // 正常来说，brdf传入的应该是入射光和出射光，但根据亥姆霍兹可逆性(Helmholtz Reciprocity)，两者相反结果不变
+                    // 但这里有个坑，eval这个brdf函数中期望传入的入射光是inward的(由光源指向着色点)，而非outward
+                    // 因此调用方式有2个：pm->eval(wo, ws, N) 或者 pm->eval(-ws, -wo, N)
+                    lightDir = emit * pm->eval(wo, ws, N) * cosine * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
+                }
+        
+                // Sample indirect illumination
+                float ksi = get_random_float();
+                if (ksi < RussianRoulette)
+                {
+                    Vector3f wi = normalize(pm->sample(wo,N));
+                    // Determine whether the hit object is an emitting object
+                    Ray bounceRay = Ray(pOffset, wi);
+                    Intersection bounceInsct = intersect(bounceRay);
+                    if (bounceInsct.happened && !bounceInsct.obj->hasEmit())
+                    {
+                        float pdf = pm->pdf(wo, wi, N);
+                        if (pdf>EPSILON)
+                            lightIndir = castRay(bounceRay, depth + 1) * pm->eval(wo, wi, N) * dotProduct(wi, N) / (pdf * RussianRoulette);
+                    }
+                }
+                break;
             }
         }
-        
         hitColor = pm->getEmission() + lightDir + lightIndir;
         // Limit the range of the hitColor component to avoid excessively large values
         hitColor.x = clamp(0,1, hitColor.x);

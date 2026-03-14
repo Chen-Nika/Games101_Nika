@@ -7,7 +7,7 @@
 
 #include "Vector.hpp"
 
-enum MaterialType { DIFFUSE, MICROFACET };
+enum MaterialType { DIFFUSE, MICROFACET, MIRROR };
 
 class Material
 {
@@ -172,6 +172,12 @@ Vector3f Material::sample(const Vector3f& wi, const Vector3f& N)
 
             break;
         }
+    case MIRROR:
+        {
+            Vector3f reflection = reflect(wi, N);
+            return reflection;
+            break;
+        }
     }
 }
 
@@ -185,6 +191,16 @@ float Material::pdf(const Vector3f& wi, const Vector3f& wo, const Vector3f& N)
             // uniform sample probability 1 / (2 * PI)
             if (dotProduct(wo, N) > 0.0f)
                 return 0.5f / M_PI;
+            else
+                return 0.0f;
+            break;
+        }
+    case MIRROR:
+        {
+            // 在Sample中已经指定出射的方向只会是反射方向，因此此时只要观察方向不是负半球方向 pdf就应该是1
+            // PDF 的直观意义是：“你在某个方向采样到光线的概率有多大？”
+            if (dotProduct(wo, N)>0.0f)
+                return 1.0f;
             else
                 return 0.0f;
             break;
@@ -269,6 +285,25 @@ Vector3f Material::eval(const Vector3f& wi, const Vector3f& wo, const Vector3f& 
             {
                 return Vector3f(0.0f);
             }
+            break;
+        }
+    case MIRROR:
+        {
+            // Mirror材质的BRDF是个狄拉克函数
+            
+            float costheta = dotProduct(N,wo);
+            if (costheta > 0.0f)
+            {
+                float denominator = costheta;
+                if (denominator < 0.001f)
+                    return 0.f;
+                Vector3f mirror = 1.f / denominator;
+                float F;
+                fresnel(wi,N,ior,F);
+                return F * mirror;
+            }
+            else
+                return Vector3f(0.0f);
             break;
         }
     }

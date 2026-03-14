@@ -37,13 +37,14 @@ int main(int argc, char** argv)
     microfacet->Ks = Vector3f(0.45, 0.45, 0.45);
     microfacet->Kd = Vector3f(0.3, 0.3, 0.25);
     microfacet->ior = 12.85;
+    microfacet->roughness = 0.25f;
     Sphere sphere1(Vector3f(150, 100, 200), 100, microfacet);
 
-    // scene.Add(&sphere1);
+    scene.Add(&sphere1);
     
     scene.Add(&floor);
-    scene.Add(&shortbox);
-    scene.Add(&tallbox);
+    // scene.Add(&shortbox);
+    // scene.Add(&tallbox);
     scene.Add(&left);
     scene.Add(&right);
     scene.Add(&light_);
