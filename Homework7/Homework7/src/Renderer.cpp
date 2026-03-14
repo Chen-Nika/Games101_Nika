@@ -9,7 +9,7 @@
 
 #include <thread>
 #include <mutex>
-#define _USE_MULTITHREAD 0
+#define _USE_MULTITHREAD 1
 
 inline float deg2rad(const float& deg) { return deg * M_PI / 180.0; }
 
@@ -29,7 +29,7 @@ void Renderer::Render(const Scene& scene)
     
 
     // change the spp value to change sample ammount
-    int spp = 32;
+    int spp = 512;
     std::cout << "SPP: " << spp << "\n";
     
     float process = 0.f;

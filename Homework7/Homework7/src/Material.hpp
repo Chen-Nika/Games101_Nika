@@ -7,7 +7,7 @@
 
 #include "Vector.hpp"
 
-enum MaterialType { DIFFUSE };
+enum MaterialType { DIFFUSE, MICROFACET };
 
 class Material
 {
@@ -48,6 +48,7 @@ private:
     // Compute Fresnel equation
     //
     // \param I is the incident view direction
+    // Attention! The direction of incidence is from the light source to the shading point, not outward!
     //
     // \param N is the normal at the intersection point
     //
@@ -110,7 +111,8 @@ public:
     Vector3f Kd, Ks;
     float specularExponent;
     //Texture tex;
-
+    // roughness for microsurface model
+    float roughness = 1.0f;
     inline Material(MaterialType t = DIFFUSE, Vector3f e = Vector3f(0, 0, 0));
     inline MaterialType getType();
     //inline Vector3f getColor();
@@ -148,12 +150,13 @@ Vector3f Material::getColorAt(double u, double v)
     return Vector3f();
 }
 
-
+// sample a ray randomly by Material properties in hemisphere
 Vector3f Material::sample(const Vector3f& wi, const Vector3f& N)
 {
     switch (m_type)
     {
     case DIFFUSE:
+    case MICROFACET:
         {
             // Uniform sample on the hemisphere
             // x_1 controls the height (z_axis), x_2 controls the azimuth phi (rotation around the z-axis)
@@ -177,6 +180,7 @@ float Material::pdf(const Vector3f& wi, const Vector3f& wo, const Vector3f& N)
     switch (m_type)
     {
     case DIFFUSE:
+    case MICROFACET:
         {
             // uniform sample probability 1 / (2 * PI)
             if (dotProduct(wo, N) > 0.0f)
@@ -202,6 +206,64 @@ Vector3f Material::eval(const Vector3f& wi, const Vector3f& wo, const Vector3f& 
             {
                 Vector3f diffuse = Kd / M_PI;
                 return diffuse;
+            }
+            else
+            {
+                return Vector3f(0.0f);
+            }
+            break;
+        }
+        case MICROFACET:
+        {
+            // calculate the contribution of microsurface model (Cook-Torrance)
+            // Make sure the eye ray can reach the plane
+            if (dotProduct(wo,N) > 0.0f)
+            {
+                float F,G,D;
+                // Calculate the fresnel term, that is, what proportion of power was reflected
+                fresnel(wi,N,ior,F);
+                // Calculate the geometry masking/shadowing term
+                auto G_Function = [&](const float& roughness, const Vector3f& wi, const Vector3f& wo, const Vector3f& N)
+                {
+                    float A_wi, A_wo;
+                    float tan_wi = crossProduct(wi, N).norm() / dotProduct(wi, N);
+                    A_wi = (-1 + sqrt(1+ roughness* roughness * pow(tan_wi,2))) * 0.5f;
+                    
+                    float tan_wo = crossProduct(wo, N).norm() / dotProduct(wo, N);
+                    A_wo = (-1 + sqrt(1+ roughness* roughness * pow(tan_wo,2))) * 0.5f;
+                    float divisor = 1 + A_wi + A_wo;
+                    if (divisor < EPSILON)
+                        return 1.f;
+                    else
+                        return 1.f / divisor;
+                };
+                G = G_Function(roughness, wi, wo, N);
+                
+                // Calculate the NDF(Normal Distribution Function)
+                auto D_function = [&](const float& roughness, const Vector3f& h, const Vector3f& N)
+                {
+                    float cos_sita = dotProduct(h, N);
+                    // 这里使用了一个变换，sin^2 = 1 - cos^2
+                    float divisor = (M_PI * pow(1.0 + cos_sita * cos_sita * (roughness * roughness - 1), 2));
+                    if (divisor < 0.001)
+                        return 1.f;
+                    else 
+                        return (roughness * roughness) / divisor;
+                };
+                Vector3f h = normalize(-wi + wo);
+                D = D_function(roughness, h, N);
+                
+                // Calculate Cook-Torrance
+                Vector3f brdf_diffuse = Kd / M_PI;
+                Vector3f diffuse = (Vector3f(1.f - F)) * brdf_diffuse;
+                
+                Vector3f specular;
+                float divisor = 4.f*dotProduct(N, -wi) * dotProduct(N, wo);
+                if (divisor < 0.001)
+                    specular = Vector3f(1.f);
+                else 
+                    specular = F * G * D / divisor;
+                return diffuse + specular;
             }
             else
             {

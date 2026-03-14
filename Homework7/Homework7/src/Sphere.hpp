@@ -57,13 +57,17 @@ public:
         if (!solveQuadratic(a, b, c, t0, t1)) return result;
         if (t0 < 0) t0 = t1;
         if (t0 < 0) return result;
-        result.happened=true;
+        // Avoid self-intersection due to precision issues
+        if (t0 > 0.5f)
+        {
+            result.happened=true;
 
-        result.coords = Vector3f(ray.origin + ray.direction * t0);
-        result.normal = normalize(Vector3f(result.coords - center));
-        result.m = this->m;
-        result.obj = this;
-        result.distance = t0;
+            result.coords = Vector3f(ray.origin + ray.direction * t0);
+            result.normal = normalize(Vector3f(result.coords - center));
+            result.m = this->m;
+            result.obj = this;
+            result.distance = t0;
+        }
         return result;
 
     }
@@ -71,7 +75,7 @@ public:
     { N = normalize(P - center); }
 
     Vector3f evalDiffuseColor(const Vector2f &st)const {
-        //return m->getColor();
+        return Vector3f(1.f);
     }
     Bounds3 getBounds(){
         return Bounds3(Vector3f(center.x-radius, center.y-radius, center.z-radius),

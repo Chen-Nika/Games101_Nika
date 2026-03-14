@@ -59,7 +59,6 @@ bool Scene::trace(
     return (*hitObject != nullptr);
 }
 
-//Implementation of Path Tracing
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     // TO DO Implement Path Tracing Algorithm here
@@ -71,7 +70,7 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
     {
         Vector3f p = shadePoint.coords;// Position of shading point
         Material* pm = shadePoint.m;
-        Vector3f wo = normalize(-ray.direction);// View direction
+        Vector3f wo = normalize(ray.direction);// View direction
         Vector3f N = normalize(shadePoint.normal);// Normal vector of shading point
         Vector3f lightDir(0), lightIndir(0);
         
@@ -87,7 +86,7 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         // Avoid self-intersection between the shadow ray and the object itself due to floating-point number precision issue
         // Raise the coordinates a little towards/backwards the normal direction
         Vector3f pOffset;
-        if (dotProduct(wo, N) > 0)
+        if (dotProduct(wo, N) < 0)
             pOffset= p + EPSILON * N;
         else
             pOffset= p - EPSILON * N;
@@ -97,7 +96,10 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         // cosine >EPSILON, avoid back direct lighting
         if (abs(distancePtoX - blockInsct.distance) < 0.01f && cosine >EPSILON)
         {
-            lightDir = emit * pm->eval(ws, wo, N) * cosine * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
+            // 正常来说，brdf传入的应该是入射光和出射光，但根据亥姆霍兹可逆性(Helmholtz Reciprocity)，两者相反结果不变
+            // 但这里有个坑，eval这个brdf函数中期望传入的入射光是inward的(由光源指向着色点)，而非outward
+            // 因此调用方式有2个：pm->eval(wo, ws, N) 或者 pm->eval(-ws, -wo, N)
+            lightDir = emit * pm->eval(wo, ws, N) * cosine * dotProduct(-ws, NN) / (distancePtoX * distancePtoX * pdfLight);
         }
         
         // Sample indirect illumination
@@ -110,12 +112,17 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
             Intersection bounceInsct = intersect(bounceRay);
             if (bounceInsct.happened && !bounceInsct.obj->hasEmit())
             {
-                float pdf = pm->pdf(wi, wo, N);
+                float pdf = pm->pdf(wo, wi, N);
                 if (pdf>EPSILON)
-					lightIndir = castRay(bounceRay, depth + 1) * pm->eval(wi, wo, N) * dotProduct(wi, N) / (pm->pdf(wi,wo,N) * RussianRoulette);
+					lightIndir = castRay(bounceRay, depth + 1) * pm->eval(wo, wi, N) * dotProduct(wi, N) / (pdf * RussianRoulette);
             }
         }
+        
         hitColor = pm->getEmission() + lightDir + lightIndir;
+        // Limit the range of the hitColor component to avoid excessively large values
+        hitColor.x = clamp(0,1, hitColor.x);
+        hitColor.y = clamp(0,1, hitColor.y);
+        hitColor.z = clamp(0,1, hitColor.z);
     }
     return hitColor;
 }

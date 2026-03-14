@@ -32,7 +32,15 @@ int main(int argc, char** argv)
     MeshTriangle left("../models/cornellbox/left.obj", red);
     MeshTriangle right("../models/cornellbox/right.obj", green);
     MeshTriangle light_("../models/cornellbox/light.obj", light);
+    
+    Material* microfacet = new Material(MICROFACET, Vector3f(0.0f));
+    microfacet->Ks = Vector3f(0.45, 0.45, 0.45);
+    microfacet->Kd = Vector3f(0.3, 0.3, 0.25);
+    microfacet->ior = 12.85;
+    Sphere sphere1(Vector3f(150, 100, 200), 100, microfacet);
 
+    // scene.Add(&sphere1);
+    
     scene.Add(&floor);
     scene.Add(&shortbox);
     scene.Add(&tallbox);
