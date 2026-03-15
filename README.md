@@ -6,5 +6,6 @@ Games101的作业实现代码，每个作业的解析博客在知乎专栏上htt
 4. 作业4 解析博客： https://zhuanlan.zhihu.com/p/1938310013610358532
 5. 作业5 解析博客： https://zhuanlan.zhihu.com/p/1943974455639516596
 6. 作业6 解析博客： https://zhuanlan.zhihu.com/p/1947763198162888522
+7. 作业7 解析博客： https://zhuanlan.zhihu.com/p/2016642130957850618
 
 希望能帮助到大家
